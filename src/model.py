@@ -94,19 +94,24 @@ def train_model(model, training, validation, save=False):
                 metrics=['accuracy']
     )
 
-    return model.fit(
+    return model, model.fit(
         training, 
         validation_data=validation, 
-        epochs=3, 
-        callbacks=[save_model] if save else [],
+        epochs=10, 
+        callbacks=[save_model()] if save else [],
     )
 
 def save_model():
-    tf.keras.callbacks.ModelCheckpoint(
-        filepath="../model",
+    return tf.keras.callbacks.ModelCheckpoint(
+        filepath="../model/model",
         save_weights_only=True,
         verbose=1,
     )
+
+def load_model():
+    model = get_model()
+    model.load_weights("../model/model")
+    return model
 
 def plot_accuracy(history):
     plt.plot(history.history['accuracy'], label='accuracy')
@@ -123,6 +128,8 @@ if __name__ == "__main__":
     v = get_validation()
     m = get_model()
 
-    h = train_model(m, t, v)
-    plot_accuracy(h)
+    m, h = train_model(m, t, v, save=True)
+    # plot_accuracy(h)
+
+
 
