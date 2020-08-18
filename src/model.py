@@ -82,7 +82,7 @@ def get_model():
 
     # CONVOLUTIONAL LAYERS
     # First covolutional layer (38, 38, 32)
-    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(HEIGHT, WIDTH, 3)))
+    model.add(layers.Conv2D(32, (3, 3), activation='relu'))
     # Downsample again (19, 19, 32)
     model.add(layers.MaxPooling2D((2, 2)))
     # Second convolutional layer (17, 17, 64)
@@ -179,6 +179,3 @@ if __name__ == "__main__":
 
     m, h = train_model(m, t, v, save=True)
     plot_accuracy(h)
-
-
-
