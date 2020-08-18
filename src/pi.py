@@ -1,3 +1,9 @@
+"""Script to be run on Raspberry Pi
+Periodically takes an image (with attached camera), 
+and uploads it to an S3 bucket.
+
+TODO: Add IAM role for this, don't use root permissions!
+"""
 # Imports
 
 # Base Python
@@ -8,8 +14,15 @@ import datetime
 import cv2
 import boto3
 
-def take_picture():
-    """Take a picture and save it"""
+# Globals
+PERIOD = 2 * 60  # 2 minutes
+
+def take_picture() -> str:
+    """Take a picture and save it
+    
+    Returns:
+        str: The relative path to the image
+    """
     camera = cv2.VideoCapture(0)
     time.sleep(1)
     return_value, image = camera.read()
@@ -21,7 +34,14 @@ def take_picture():
     return file_name
 
 def upload_s3(file_name: str):
-    """Upload an image to S3"""
+    """Upload an image to S3
+    
+    Args:
+        file_name (str): The relative path to the image to upload
+        
+    Returns:
+        bool: Whether or not the upload succeeded
+    """
     s3_client = boto3.client('s3')
     try:
         response = s3_client.upload_file(file_name, "awenstrup", f"tito/{file_name}")
@@ -33,4 +53,4 @@ def upload_s3(file_name: str):
 while True:
     file_name = take_picture()
     upload_s3(file_name)
-    time.sleep(10 * 60)
+    time.sleep(PERIOD)
