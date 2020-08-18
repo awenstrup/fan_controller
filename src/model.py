@@ -1,4 +1,7 @@
-"""Train the model. Looks in the ../images folder for the training set"""
+"""Train the model. Looks in the ../images folder for the training set
+
+Saves the model to the ../model folder
+"""
 
 # Imports
 
@@ -31,6 +34,16 @@ DATA_DIR = pathlib.Path(path.abspath("../images"))
 WIDTH = 480
 HEIGHT = 640
 
+CLASS_NAMES = ["not_tito", "tito"]  # negative, positive
+CLASS_WEIGHTS = {
+    CLASS_NAMES.index("tito"): 1,
+    CLASS_NAMES.index("not_tito"): 0.1,
+}
+
+VALIDATION_SPLIT = 0.2
+EPOCHS = 8
+
+
 # Helpers
 def view_tito(): 
     tito = list(DATA_DIR.glob('../images/tito/*'))
@@ -42,19 +55,21 @@ def view_tito():
 def get_training():
     return keras.preprocessing.image_dataset_from_directory(
         DATA_DIR,
-        validation_split=0.15,
+        validation_split=VALIDATION_SPLIT,
         subset="training",
         seed=123,
         image_size=(HEIGHT, WIDTH),
+        class_names=CLASS_NAMES,
     )
 
 def get_validation():
     return keras.preprocessing.image_dataset_from_directory(
         DATA_DIR,
-        validation_split=0.15,
+        validation_split=VALIDATION_SPLIT,
         subset="validation",
         seed=123,
         image_size=(HEIGHT, WIDTH),
+        class_names=CLASS_NAMES,
     )
 
 def get_model():
@@ -82,23 +97,32 @@ def get_model():
     model.add(layers.Flatten())
     # First dense layer (128)
     model.add(layers.Dense(64, activation='relu'))
-    # Second dense layer, output (2)
-    model.add(layers.Dense(2))
+    # Output layer (1)
+    model.add(layers.Dense(1, activation='sigmoid'))
 
     logger.info(model.summary())
     return model
 
 def train_model(model, training, validation, save=False):
-    model.compile(optimizer='adam',
-                loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-                metrics=['accuracy']
+    model.compile(optimizer="adam",
+                loss="binary_crossentropy",
+                metrics=[
+                    keras.metrics.Precision(), 
+                    keras.metrics.Recall(),
+                    keras.metrics.BinaryAccuracy(), 
+                    keras.metrics.FalsePositives(), 
+                    keras.metrics.FalseNegatives(),
+                    keras.metrics.TruePositives(),
+                    keras.metrics.TrueNegatives(),
+                ]
     )
 
     return model, model.fit(
         training, 
         validation_data=validation, 
-        epochs=10, 
+        epochs=EPOCHS, 
         callbacks=[save_model()] if save else [],
+        class_weight=CLASS_WEIGHTS,
     )
 
 def save_model():
@@ -114,22 +138,47 @@ def load_model():
     return model
 
 def plot_accuracy(history):
-    plt.plot(history.history['accuracy'], label='accuracy')
-    plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
+    # Basic metrics
+    plt.plot(history.history['val_binary_accuracy'], label='binary_accuracy')
+    plt.plot(history.history['val_precision'], label = 'precision')
+    plt.plot(history.history['val_recall'], label = 'recall')  # This is most important for us!
     plt.xlabel('Epoch')
-    plt.ylabel('Accuracy')
-    plt.ylim([0.5, 1])
+    plt.ylabel('Metrics')
+    plt.legend(loc='lower right')
+    plt.show()
+
+    # # Wrong decisions
+    # plt.plot(history.history['val_false_positives'], label='Fan was needlessly on')
+    # plt.plot(history.history['val_false_negatives'], label = 'Fan should have turned on')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('False Results')
+    # plt.legend(loc='lower right')
+    # plt.show()
+
+    # # Correct decisions
+    # plt.plot(history.history['val_true_positives'], label='Fan was off :)')
+    # plt.plot(history.history['val_true_negatives'], label = 'Fan was on :)')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('False Results')
+    # plt.legend(loc='lower right')
+    # plt.show()
+
+    # Tito was in front of the fan. Was it on? (this is summarized by precision)
+    plt.plot(history.history['val_false_negatives'], label = 'Fan should have turned on')
+    plt.plot(history.history['val_true_positives'], label = 'Fan was on :)')
+    plt.xlabel('Epoch')
+    plt.ylabel('Tito in front of fan')
     plt.legend(loc='lower right')
     plt.show()
 
 if __name__ == "__main__":
-    # view_tito()
     t = get_training()
+    logger.debug(t.class_names)
     v = get_validation()
     m = get_model()
 
     m, h = train_model(m, t, v, save=True)
-    # plot_accuracy(h)
+    plot_accuracy(h)
 
 
 
