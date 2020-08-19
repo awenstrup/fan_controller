@@ -26,6 +26,7 @@ def take_picture() -> str:
     camera = cv2.VideoCapture(0)
     time.sleep(1)
     return_value, image = camera.read()
+    image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
     del(camera)
 
     time_str = str(datetime.datetime.now()).replace(" ", "_").replace("-", "_").replace(":", "_")
