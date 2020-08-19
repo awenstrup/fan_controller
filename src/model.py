@@ -103,7 +103,7 @@ def get_model():
     logger.info(model.summary())
     return model
 
-def train_model(model, training, validation, save=False):
+def train_model(model, training, validation):
     model.compile(optimizer="adam",
                 loss="binary_crossentropy",
                 metrics=[
@@ -121,20 +121,14 @@ def train_model(model, training, validation, save=False):
         training, 
         validation_data=validation, 
         epochs=EPOCHS, 
-        callbacks=[save_model()] if save else [],
         class_weight=CLASS_WEIGHTS,
     )
 
-def save_model():
-    return tf.keras.callbacks.ModelCheckpoint(
-        filepath="../model/model",
-        save_weights_only=True,
-        verbose=1,
-    )
+def save_model(model):
+    model.save("../model")
 
 def load_model():
-    model = get_model()
-    model.load_weights("../model/model")
+    model = keras.models.load("../model")
     return model
 
 def plot_accuracy(history):
@@ -177,5 +171,7 @@ if __name__ == "__main__":
     v = get_validation()
     m = get_model()
 
-    m, h = train_model(m, t, v, save=True)
+    m, h = train_model(m, t, v)
     plot_accuracy(h)
+
+    save_model(m)
