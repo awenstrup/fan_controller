@@ -49,6 +49,10 @@ def load_one(key, dest, conn):
 
 def load_all(destination: str, manifest: str = ""):
     """Load all files to the specified destiniation
+
+    Args:
+        destiniation (str): The directory to load files to
+        manifest (str): The manifest file to use, if data is already labeled
     """
     s3_client = boto3.client('s3')
     response = s3_client.list_objects(Bucket=BUCKET, Prefix=PREFIX, MaxKeys=2000)
@@ -56,12 +60,12 @@ def load_all(destination: str, manifest: str = ""):
 
     if manifest:
         logger.debug("Data is already labeled, using a manifest file...")
-        if not path.exists("../tmp/manifest"):
-            logger.debig("Downloading manifest file...")
-            os.mkdir("../tmp")
-            s3_client.download_file(BUCKET, manifest, "../tmp/manifest")
+        if not path.exists(path.join(paths.TMP, "manifest"):
+            logger.debug("Downloading manifest file...")
+            os.mkdir(paths.TMP)
+            s3_client.download_file(BUCKET, manifest, path.join(paths.TMP, "manifest"))
 
-        with open("../tmp/manifest", "r") as f:
+        with open(path.join(paths.TMP, "manifest"), "r") as f:
             lines = f.readlines()
         lookup = {}
         for line in lines:
@@ -76,7 +80,7 @@ def load_all(destination: str, manifest: str = ""):
     count = 0
     for obj in objects:
         key = obj["Key"]
-        if FILE_TYPE in key:
+        if FILE_TYPE in key:  # Ignore extra files, like manifests or json
             dest = path.abspath(destination + "/" + lookup.get(obj["Key"], "unlabeled"))
             if not path.exists(dest):
                 os.mkdir(dest)
@@ -88,5 +92,5 @@ def load_all(destination: str, manifest: str = ""):
 
 
 if __name__ == "__main__":
-    load_all("../images", MANIFEST)
-    os.rmdir("../tmp")
+    load_all(paths.IMAGES, MANIFEST)
+    os.rmdir(paths.TMP)

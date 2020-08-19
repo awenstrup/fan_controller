@@ -1,6 +1,6 @@
-"""Train the model. Looks in the ../images folder for the training set
+"""Train the model. Looks in the images folder for the training set
 
-Saves the model to the ../model folder
+Saves the model to the model folder
 """
 
 # Imports
@@ -19,20 +19,22 @@ import tensorflow.keras.layers as layers
 import pathlib
 import matplotlib.pyplot as plt
 
+import paths
+
 # Globals
 
 # Create Logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.INFO)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
-DATA_DIR = pathlib.Path(path.abspath("../images"))
-WIDTH = 480
-HEIGHT = 640
+DATA_DIR = pathlib.Path(paths.IMAGES)
+WIDTH = 480  # pixels
+HEIGHT = 640  # pixels
 
 CLASS_NAMES = ["not_tito", "tito"]  # negative, positive
 CLASS_WEIGHTS = {
@@ -41,18 +43,20 @@ CLASS_WEIGHTS = {
 }
 
 VALIDATION_SPLIT = 0.2
-EPOCHS = 8
+EPOCHS = 8  # tuned by hand, 
 
 
 # Helpers
-def view_tito(): 
-    tito = list(DATA_DIR.glob('../images/tito/*'))
+def view_tito() -> None:
+    """Display an image from the tito directory to make sure data loaded correctly"""
+    tito = list(DATA_DIR.glob(path.join(paths.IMAGES, "tito/*")))
     image = pil.Image.open(str(tito[0]))
     logger.info(image.size)  # Looks to be 480 by 640 for raspi camera
     logger.info(image.mode)
     image.show()
 
 def get_training():
+    """Load and return the training dataset"""
     return keras.preprocessing.image_dataset_from_directory(
         DATA_DIR,
         validation_split=VALIDATION_SPLIT,
@@ -63,6 +67,7 @@ def get_training():
     )
 
 def get_validation():
+    """Load and return the validation training set"""
     return keras.preprocessing.image_dataset_from_directory(
         DATA_DIR,
         validation_split=VALIDATION_SPLIT,
@@ -73,10 +78,20 @@ def get_validation():
     )
 
 def get_model():
+    """Generate the network architecture
+
+    For now, this is completely unparameterized and tuned by hand, but
+    seems to be working fairly well.
+
+    1. Preprocessing layers downsample images and remap pixel values
+    2. Convolutional layers determine image properties
+    3. Densely connected layers learn from image properties and output result
+    """
     model = keras.models.Sequential()
+
+    # PREPROCESSING LAYERS
     # Downsample orignal images to 40x40 images (40, 40, 3)
     model.add(layers.MaxPooling2D((HEIGHT/40, WIDTH/40), input_shape=(HEIGHT, WIDTH, 3)))
-
     # Remap pixels to [0,1] (40, 40, 3)
     model.add(layers.experimental.preprocessing.Rescaling(1./255))
 
@@ -100,10 +115,22 @@ def get_model():
     # Output layer (1)
     model.add(layers.Dense(1, activation='sigmoid'))
 
-    logger.info(model.summary())
+    logger.debug(model.summary())
     return model
 
 def train_model(model, training, validation):
+    """Train ithe model
+
+    Args:
+        model: A network to train
+        training: a training dataset
+        validation: a validation dataset
+
+    Returns:
+        The trained model
+        The history of the metrics by epoch, for performance evaluation
+    """
+
     model.compile(optimizer="adam",
                 loss="binary_crossentropy",
                 metrics=[
@@ -125,13 +152,25 @@ def train_model(model, training, validation):
     )
 
 def save_model(model):
-    model.save("../model")
+    """Save the model"""
+    model.save(paths.MODEL)
 
 def load_model():
-    model = keras.models.load("../model")
+    """Load a pretrained model"""
+    model = keras.models.load(paths.MODEL)
     return model
 
 def plot_accuracy(history):
+    """Generate some plots for evaluating the model
+
+    Args:
+        history: The metrics to evaluate, given by epoch
+    
+    Note: This model is being used to turn a fan on and off. The cost of turning
+    the fan on when the dog isn't there (false positives) is low, nothing really 
+    happens. The cost of leaving the fan off when the dog is there (false negatives)
+    is high; the dog may learn that the fan doesn't work. Therefore, recall is the 
+    most useful metric"""
     # Basic metrics
     plt.plot(history.history['val_binary_accuracy'], label='binary_accuracy')
     plt.plot(history.history['val_precision'], label = 'precision')

@@ -24,7 +24,7 @@ def take_picture() -> str:
         str: The relative path to the image
     """
     camera = cv2.VideoCapture(0)
-    time.sleep(1)
+    time.sleep(1)  # Wait for the camera to initialize
     return_value, image = camera.read()
     image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
     del(camera)
