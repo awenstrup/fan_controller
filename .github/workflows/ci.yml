@@ -8,9 +8,9 @@ on:
 
 jobs:
   black:
-    - uses: actions/checkout
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout
     - name: Install dependencies
       run: |
         python3 -m pip install --upgrade pip
