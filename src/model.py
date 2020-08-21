@@ -155,9 +155,20 @@ def save_model(model):
     """Save the model"""
     model.save(paths.MODEL)
 
+def save_lite_model(model):
+    """Save a lite version of the model to run on RaspPi"""
+    converter = tf.lite.TFLiteConverter.from_keras_model(model)
+    tflite_model = converter.convert()
+
+    if not path.exists(paths.LITE_MODEL):
+        os.mkdir(paths.LITE_MODEL)
+    
+    with tf.io.gfile.GFile(paths.LITE_MODEL + "/lite_model", 'wb') as f:
+        f.write(tflite_model)
+
 def load_model():
     """Load a pretrained model"""
-    model = keras.models.load(paths.MODEL)
+    model = keras.models.load_model(paths.MODEL)
     return model
 
 def plot_accuracy(history):
@@ -208,9 +219,10 @@ if __name__ == "__main__":
     t = get_training()
     logger.debug(t.class_names)
     v = get_validation()
-    m = get_model()
+    m = load_model()
 
-    m, h = train_model(m, t, v)
-    plot_accuracy(h)
+    # m, h = train_model(m, t, v)
+    # plot_accuracy(h)
 
-    save_model(m)
+    save_lite_model(m)
+    # save_model(m)

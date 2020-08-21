@@ -1,4 +1,5 @@
 images/
 tmp/
 model/
+lite_model/
 *pycache*
