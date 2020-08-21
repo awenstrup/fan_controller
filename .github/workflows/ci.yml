@@ -8,6 +8,7 @@ on:
 
 jobs:
   black:
+    uses: actions/checkout@v2
     runs-on: ubuntu-latest
     steps:
     - name: Install dependencies
@@ -16,6 +17,5 @@ jobs:
         pip3 install black
     - name: Lint with black
       run: |
-        ls
-        /home/runner/.local/bin/black . -l 120 --check
+        pwd; ls; /home/runner/.local/bin/black . -l 120 --check
 
