@@ -17,6 +17,7 @@ jobs:
         pip3 install black
     - name: Lint with black
       run: |
-        # For some reason black isn't on PATH by default
+        pwd
+        ls
         /home/runner/.local/bin/black . -l 120 --check
 
