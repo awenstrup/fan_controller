@@ -94,9 +94,7 @@ def get_model():
 
     # PREPROCESSING LAYERS
     # Downsample orignal images to 40x40 images (40, 40, 3)
-    model.add(
-        layers.MaxPooling2D((HEIGHT / 40, WIDTH / 40), input_shape=(HEIGHT, WIDTH, 3))
-    )
+    model.add(layers.MaxPooling2D((HEIGHT / 40, WIDTH / 40), input_shape=(HEIGHT, WIDTH, 3)))
     # Remap pixels to [0,1] (40, 40, 3)
     model.add(layers.experimental.preprocessing.Rescaling(1.0 / 255))
 
@@ -153,12 +151,7 @@ def train_model(model, training, validation):
 
     return (
         model,
-        model.fit(
-            training,
-            validation_data=validation,
-            epochs=EPOCHS,
-            class_weight=CLASS_WEIGHTS,
-        ),
+        model.fit(training, validation_data=validation, epochs=EPOCHS, class_weight=CLASS_WEIGHTS,),
     )
 
 
@@ -199,9 +192,7 @@ def plot_accuracy(history):
     # Basic metrics
     plt.plot(history.history["val_binary_accuracy"], label="binary_accuracy")
     plt.plot(history.history["val_precision"], label="precision")
-    plt.plot(
-        history.history["val_recall"], label="recall"
-    )  # This is most important for us!
+    plt.plot(history.history["val_recall"], label="recall")  # This is most important for us!
     plt.xlabel("Epoch")
     plt.ylabel("Metrics")
     plt.legend(loc="lower right")

@@ -69,9 +69,7 @@ def run_script():
         raise Exception("No script specified. Call with either 'upload' or 'run'")
 
     if script not in ["upload.py", "run.py"]:
-        raise Exception(
-            f"Invalid script specified: {script}. Call with either 'upload' or 'run'"
-        )
+        raise Exception(f"Invalid script specified: {script}. Call with either 'upload' or 'run'")
 
     command = f"python3 fan_controller/src/pi/{script};"
     logger.info(f"Running: {command}")

@@ -30,12 +30,7 @@ def take_picture() -> str:
     image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
     del camera
 
-    time_str = (
-        str(datetime.datetime.now())
-        .replace(" ", "_")
-        .replace("-", "_")
-        .replace(":", "_")
-    )
+    time_str = str(datetime.datetime.now()).replace(" ", "_").replace("-", "_").replace(":", "_")
     file_name = f"images/{time_str}.png"
     cv2.imwrite(file_name, image)
     return file_name
