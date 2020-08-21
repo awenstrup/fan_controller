@@ -23,11 +23,13 @@ import paths
 PERIOD = 10  # 10 seconds
 PIN = 17
 
+
 def load_model():
     """Load a pretrained model"""
     model = tflite.Interpreter(paths.LITE_MODEL + "/lite_model")
     model.allocate_tensors()
     return model
+
 
 def predict(model, image):
     """Run an image through the model"""
@@ -35,19 +37,20 @@ def predict(model, image):
     model.invoke()
     return model.get_tensor(model.get_output_details()[0]["index"])
 
+
 def update(model, fan_state, fan):
     """Given a model, take a photo and update the fan state"""
     camera = cv2.VideoCapture(0)
     time.sleep(1)
     _, image = camera.read()
-    del(camera)
+    del camera
 
     image = cv2.rotate(image, cv2.ROTATE_90_CLOCKWISE)
     image = np.asarray([image], dtype=np.float32)
 
     prediction = predict(model, image)
     print(prediction)
-    if abs(prediction - 0.5) > 0.1:  
+    if abs(prediction - 0.5) > 0.1:
         # Only update model if the prediction is >60% confident to reduce random toggling
         temp = True if prediction > 0.5 else False
         if temp is not fan_state:
@@ -57,11 +60,13 @@ def update(model, fan_state, fan):
     print("Fan state: " + str(fan_state))
     return fan_state
 
+
 def toggle_fan():
     if fan_state:
         fan.on()
     else:
         fan.off()
+
 
 if __name__ == "__main__":
     fan_state = False  # False is off, True is on

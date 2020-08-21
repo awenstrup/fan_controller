@@ -31,9 +31,10 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 ch.setFormatter(formatter)
 logger.addHandler(ch)
+
 
 def load_one(key, dest, conn):
     """Download a single image
@@ -43,9 +44,10 @@ def load_one(key, dest, conn):
         dest (str): The place to download it, preferably an absolute path
         conn: An S3 client object
     """
-    file_name = dest + '/' + path.basename(key)
-    with open(file_name, 'wb') as data:
+    file_name = dest + "/" + path.basename(key)
+    with open(file_name, "wb") as data:
         conn.download_fileobj(BUCKET, key, data)
+
 
 def load_all(destination: str, manifest: str = ""):
     """Load all files to the specified destiniation
@@ -54,13 +56,13 @@ def load_all(destination: str, manifest: str = ""):
         destiniation (str): The directory to load files to
         manifest (str): The manifest file to use, if data is already labeled
     """
-    s3_client = boto3.client('s3')
+    s3_client = boto3.client("s3")
     response = s3_client.list_objects(Bucket=BUCKET, Prefix=PREFIX, MaxKeys=2000)
     objects = response["Contents"]
 
     if manifest:
         logger.debug("Data is already labeled, using a manifest file...")
-        if not path.exists(path.join(paths.TMP, "manifest"):
+        if not path.exists(path.join(paths.TMP, "manifest")):
             logger.debug("Downloading manifest file...")
             os.mkdir(paths.TMP)
             s3_client.download_file(BUCKET, manifest, path.join(paths.TMP, "manifest"))
@@ -72,7 +74,7 @@ def load_all(destination: str, manifest: str = ""):
             d = json.loads(line)
             key = d["source-ref"].replace(f"s3://{BUCKET}/", "")
             lookup[key] = LABEL_MAP[d[LABEL]]
-        
+
     if not path.exists(destination):
         os.mkdir(destination)
 
